@@ -5,7 +5,7 @@ const DBconnect = async () => {
 
   try {
     await mongoose.connect(MONGO_URI!, {
-      dbName: 'AARAZ',
+      dbName: 'aaraz',
       bufferCommands: true
     });
     console.log("Connected to MongoDB");
