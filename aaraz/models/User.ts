@@ -7,7 +7,6 @@ const UserSchema: Schema = new Schema({
   password: { type: String, required: true },
   address: { type: String, required: true },
   phoneNumber: { type: String, required: true },
-  accountType: { type: String, enum: ['Admin', 'Customer'], required: true },
   userId: { type: String, required: true, unique: true },
 });
 
