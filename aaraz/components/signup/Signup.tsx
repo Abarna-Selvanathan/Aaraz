@@ -3,7 +3,7 @@ import Image from "next/image";
 import '../signup/Signup.css';
 import "../../src/app/globals.css";
 import axios from 'axios';
-// import { toast } from 'react-toastify';
+import { toast } from 'react-toastify';
 import { useRouter } from "next/router";
 
 
@@ -16,13 +16,11 @@ const Signuppage: React.FC = () => {
     setShowPassword(!showPassword);
   };
 
-  const [firstName, setFirstName] = useState<string>("");
-  const [lastName, setLastName] = useState<string>("");
-  const [email, setEmail] = useState<string>("");
-  const [phoneNumber, setPhoneNumber] = useState<string>("");
-  const [password, setPassword] = useState<string>("");
-  const [confirmPassword, setConfirmPassword] = useState<string>("");
-  const [address, setAddress] = useState<string>("");
+  const [firstName, setFirstName] = useState("");
+  const [lastName, setLastName] = useState("");
+  const [email, setEmail] = useState("");
+  const [phoneNumber, setPhoneNumber] = useState('');
+  const [password, setPassword] = useState("");
 
   const router = useRouter();
 
@@ -37,9 +35,6 @@ const Signuppage: React.FC = () => {
     if (!email) errors.push("email");
     if (!phoneNumber) errors.push("phone number");
     if (!password) errors.push("password");
-    if (!confirmPassword) errors.push("confirm password");
-    if (password !== confirmPassword) errors.push("passwords do not match");
-    if (!address) errors.push("address");
 
     if (errors.length > 0) {
       const errorMessage = errors
@@ -76,7 +71,6 @@ const Signuppage: React.FC = () => {
         email,
         phoneNumber,
         password,
-        address,
       });
 
       if (response.status === 200) {
@@ -127,7 +121,7 @@ const Signuppage: React.FC = () => {
           <input onChange={(e) => setFirstName(e.target.value)} type="text" placeholder="First Name" required />
           <input onChange={(e) => setLastName(e.target.value)} type="text" placeholder="Last Name" required />
           <input onChange={(e) => setEmail(e.target.value)} type="email" placeholder="Email" required />
-          <input onChange={(e) => setPhoneNumber(e.target.value)} type="tel" placeholder="Phone Number" required />
+          <input onChange={(e) => setPhoneNumber(e.target.value)} type="number" placeholder="Phone Number" required />
 
           {/* Password Field with Toggle */}
           <div className="password-container">
@@ -135,6 +129,7 @@ const Signuppage: React.FC = () => {
               type={showPassword ? "text" : "password"}
               placeholder="Password"
               required
+              onChange={(e) => setPassword(e.target.value)}
             />
             <span className="show-password" onClick={togglePasswordVisibility}>
               👁️

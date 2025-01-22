@@ -1,46 +1,37 @@
 import { NextRequest, NextResponse } from "next/server";
+import bcrypt from "bcryptjs";
+import jwt from "jsonwebtoken";
 import DBconnect from "../../../../../lib/dbConnect";
-import UserSchema from "../../../../../models/User";
+import User from "../../../../../models/User";
 
-// Define the type for the incoming request body
-interface LoginPayload {
-  email: string;
-  password: string;
-}
+const JWT_SECRET = process.env.JWT_SECRET || "your_jwt_secret";
 
 export const POST = async (req: NextRequest): Promise<NextResponse> => {
   try {
     await DBconnect();
 
-    // Parse the incoming JSON request body
-    const { email, password }: LoginPayload = await req.json();
+    const { email, password }: { email: string; password: string } = await req.json();
 
-    // Find the user by email
-    const user = await UserSchema.findOne({ email });
+    // Check if the user exists
+    const user = await User.findOne({ email });
     if (!user) {
-      return NextResponse.json(
-        { message: "Invalid email or password." },
-        { status: 401 }
-      );
+      return NextResponse.json({ error: "Invalid email or password" }, { status: 401 });
     }
 
-    // Check if the password matches (Note: In production, compare hashed password)
-    if (password !== user.password) {
-      return NextResponse.json(
-        { message: "Invalid email or password." },
-        { status: 401 }
-      );
+    // Compare the password
+    const isPasswordValid = await bcrypt.compare(password, user.password);
+    if (!isPasswordValid) {
+      return NextResponse.json({ error: "Invalid email or password" }, { status: 401 });
     }
 
-    // Successful login
+    // Generate JWT token
+    const token = jwt.sign({ id: user._id, email: user.email }, JWT_SECRET, { expiresIn: "1h" });
+
+    return NextResponse.json({ message: "Login successful", token }, { status: 200 });
+  } catch (error: unknown) {
+    console.error("Error logging in:", (error as Error).message);
     return NextResponse.json(
-      { message: "Login successful", user },
-      { status: 200 }
-    );
-  } catch (error: any) {
-    console.error("Error during login:", error.message);
-    return NextResponse.json(
-      { message: "Failed to login.", error: error.message },
+      { message: "Failed to log in", error: (error as Error).message },
       { status: 500 }
     );
   }

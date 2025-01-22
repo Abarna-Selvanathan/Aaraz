@@ -1,7 +1,15 @@
-
 import mongoose, { Schema, Document } from 'mongoose';
 
-const OrderManagementSchema: Schema = new Schema({
+export interface IOrder {
+  _id?: string;
+  customerName: string;
+  items: { productId: string; quantity: number }[];
+  totalAmount: number;
+  // Add more fields as needed
+}
+
+
+const Order: Schema = new Schema({
   orderId: { type: String, required: true, unique: true },
   userId: { type: String, required: true },
   orderDate: { type: Date, default: Date.now },
@@ -12,7 +20,7 @@ const OrderManagementSchema: Schema = new Schema({
       quantity: { type: Number, required: true },
     },
   ],
-  totalAmount: { type: Number, required: true },
+  totalAmount: { type: String, required: true },
 });
 
-export default mongoose.models.OrderManagement || mongoose.model('OrderManagement', OrderManagementSchema);
+export default mongoose.models.OrderManagement || mongoose.model('OrderManagement', Order);

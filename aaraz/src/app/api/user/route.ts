@@ -1,54 +1,49 @@
 import { NextRequest, NextResponse } from "next/server";
+import bcrypt from "bcryptjs";
+import jwt from "jsonwebtoken";
 import DBconnect from "../../../../lib/dbConnect";
-import UserSchema from "../../../../models/User";
+import User from "../../../../models/User";
+
+const JWT_SECRET = process.env.JWT_SECRET;
 
 export const POST = async (req: NextRequest): Promise<NextResponse> => {
   try {
     await DBconnect();
-    console.log("Database connected successfully");
 
-    // Parse and validate the request body
-    const body: UserPayload = await req.json();
-    const { name, email, phoneNumber, password, address } = body;
-
-    console.log("Payload received:", { name, email, phoneNumber, address });
+    const { username, email, password }: { username: string; email: string; password: string } = await req.json();
 
     // Check if the user already exists
-    const existingUser = await UserSchema.findOne({ email });
+    const existingUser = await User.findOne({ email });
     if (existingUser) {
-      return NextResponse.json(
-        { message: "User already exists" },
-        { status: 400 }
-      );
+      return NextResponse.json({ error: "User already exists" }, { status: 400 });
     }
 
-    // Create a new user instance with userId explicitly set
-    const newUser = new UserSchema({
-      name,
-      email,
-      phoneNumber,
-      password,
-      address,
-      userId: `U${Date.now()}` // Manually set userId here
-    });
-    console.log("New user created:", newUser);
+    // Hash the password
+    const salt = await bcrypt.genSalt(10);
+    const hashedPassword = await bcrypt.hash(password, salt);
 
     // Save the user to the database
-    await newUser.save();
-    console.log("User saved successfully");
+    const newUser = new User({
+      username,
+      email,
+      password: hashedPassword,
+    });
 
+    await newUser.save();
+
+    // Generate JWT token
+    const token = jwt.sign({ id: newUser._id, email: newUser.email }, JWT_SECRET!, { expiresIn: "1h" });
+
+    return NextResponse.json({ message: "User created successfully", token }, { status: 201 });
+  } catch (error: unknown) {
+    console.error("Error registering user:", (error as Error).message);
     return NextResponse.json(
-      { message: "Account created successfully", user: newUser },
-      { status: 201 }
-    );
-  } catch (error: any) {
-    console.error("Error:", error);
-    return NextResponse.json(
-      { message: "Failed to create account.", error: error.message },
+      { message: "Failed to register user", error: (error as Error).message },
       { status: 500 }
     );
   }
 };
+
 
 // get all
 
@@ -58,7 +53,7 @@ export const GET = async (req: NextRequest): Promise<NextResponse> => {
     await DBconnect();
 
     // Retrieve all users
-    const users = await UserSchema.find({});
+    const users = await User.find({});
     return NextResponse.json(
       { users },
       { status: 200 }
@@ -71,3 +66,4 @@ export const GET = async (req: NextRequest): Promise<NextResponse> => {
     );
   }
 };
+
